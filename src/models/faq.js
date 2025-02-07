@@ -1,6 +1,5 @@
 import { Sequelize, DataTypes } from 'sequelize';
 import sequelize from "../db/index.js";
-import FAQCategory from './faqCategory.js';
 
 const FAQ = sequelize.define('FAQ', {
   id: {
@@ -11,10 +10,6 @@ const FAQ = sequelize.define('FAQ', {
   cat_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    references: {
-      model: FAQCategory,
-      key: 'cat_id',
-    },
   },
   question: {
     type: DataTypes.STRING,
