@@ -49,7 +49,7 @@ export const swaggerDocument = {
                 },
                 responses: {
                     "201": { description: "User registered successfully" },
-                    "400": { description: "Validation error or user already exists" },
+                    "400": { description: "Validation error or user already exists,username and password error" },
                     "500": { description: "Server error" },
                 },
             },
@@ -223,7 +223,7 @@ export const swaggerDocument = {
                 responses: {
                     "200": { description: "User details updated successfully" },
                     "400": { description: "Validation error" },
-                    "401": { description: "Unauthorized" },
+                    "401": { description: "Unauthorized login" },
                     "500": { description: "Server error" },
                 },
             },

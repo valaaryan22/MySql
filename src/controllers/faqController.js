@@ -1,9 +1,17 @@
 import FAQ from "../models/faq.js";
 import FAQCategory from "../models/faqCategory.js";
-
 export const addFAQ = async (req, res) => {
   try {
     const { cat_id, question, answer } = req.body;
+
+    // Check if the category exists
+    const category = await FAQCategory.findOne({ where: { cat_id } });
+
+    if (!category) {
+      return res.status(400).json({ message: "Category does not exist" });
+    }
+
+    // If the category exists, create the FAQ
     const faq = await FAQ.create({ cat_id, question, answer });
 
     res.status(201).json({ message: "FAQ added successfully", faq });
