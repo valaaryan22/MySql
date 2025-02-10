@@ -1,6 +1,5 @@
 import express from 'express';
 import { addFAQ, deleteFaq, listFAQs, updateFaq } from '../controllers/faqController.js';
-import { authenticateUser } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 

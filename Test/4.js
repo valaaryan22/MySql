@@ -2,8 +2,8 @@
 // Question: Write a function that returns the first non-repeating character in a string.
 //  Input: "swiss"
 //  Expected Output: "w"
-function nonRepeating() {
-    let input = "swiss"//data
+function nonRepeating(data) {
+    let input = data//data
     for (let i = 0; i < input.length; i++) {//loop for data 
         let count=0//initialize count
         for (let j = 0; j < input.length; j++) {//inside loop for data 
@@ -18,4 +18,4 @@ function nonRepeating() {
     }
     }
 }
-console.log("output of question 4:",nonRepeating())//show output
+console.log("output of question 4:",nonRepeating("swiss"))//show output
