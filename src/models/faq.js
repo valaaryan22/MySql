@@ -21,7 +21,7 @@ const FAQ = sequelize.define('FAQ', {
   },
 }, {
   tableName: 'faqs',
-  timestamps: false,
+  timestamps: true,
 });
 
 export default FAQ;

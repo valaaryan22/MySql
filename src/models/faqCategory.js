@@ -13,7 +13,7 @@ const FAQCategory = sequelize.define('FAQCategory', {
   },
 }, {
   tableName: 'faq_categories',
-  timestamps: false,
+  timestamps: true,
 });
 
 export default FAQCategory;

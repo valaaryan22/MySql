@@ -29,3 +29,46 @@ export const listFAQs = async (req, res) => {
     res.status(500).json({ message: "Error fetching FAQs", error: error.message });
   }
 };
+export const deleteFaq = async (req, res) => {
+  try {
+    const { id } = req.body; // Get email from request body
+
+    // Check if user exists
+    const faq = await FAQ.findOne({ where: { id } });
+    if (!faq) {
+      return res.status(404).json({ message: "faq not found" });
+    }
+
+    // Delete user
+    await faq.destroy();
+
+    res.status(200).json({ message: "faq deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting faq", error });
+  }
+};
+
+export const updateFaq = async (req, res) => {
+  try {
+    const { cat_id, question, answer } = req.body;
+
+    // Check if user exists
+    const user = await FAQ.findOne({ where: { cat_id } });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Update user details if provided
+    if (question) user.question = question;
+    if (answer) user.answer = answer;
+
+    // Hash and update password if provided
+  
+
+    await user.save(); // Save updated data
+
+    res.status(200).json({ message: "User updated successfully", user });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating user", error });
+  }
+};

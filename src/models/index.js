@@ -1,5 +1,5 @@
 import sequelize from '../db/index.js';
-import User from './User.js';
+import User from './user.js';
 
 // Sync all models with the database
 const initDB = async () => {
