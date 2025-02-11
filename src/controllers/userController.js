@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import User from "../models/user.js";
 import sendMail from "../utils/sendMail.js";
+import cron from "node-cron";
 
 // ✅ Validate User Input
 const validateUser = (name, email, password) => {
@@ -43,13 +44,33 @@ export const registerUser = async (req, res) => {
     // Create User with Empty Password History
     const user = await User.create({ name, email, password: hashedPassword, password_history: [] });
 
-    // Send Welcome Email
-    await sendMail(email, "Welcome!", `Hello ${name}, welcome to our platform!`);
+    // Schedule sending welcome email 24 hours after registration
+    scheduleWelcomeEmail(user);
 
     res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
     res.status(500).json({ message: "Error registering user", error });
   }
+};
+
+// Function to send welcome email after 24 hours
+const scheduleWelcomeEmail = (user) => {
+  const { name, email } = user;
+
+  // We now handle the 24-second delay directly using a timestamp (24 seconds after registration)
+  const delayInSeconds = 24; // Change this value to 86400 for 24 hours if needed
+  const delayInMilliseconds = delayInSeconds * 1000; // Convert seconds to milliseconds
+
+  // Using setTimeout to execute the function after the delay
+  setTimeout(async () => {
+    try {
+      // Send Welcome Email
+      await sendMail(email, "Welcome!", `Hello ${name}, welcome to our platform!`);
+      console.log(`Welcome email sent to ${email}`);
+    } catch (error) {
+      console.error(`Error sending welcome email to ${email}:`, error);
+    }
+  }, delayInMilliseconds); // This will trigger the email after the delay
 };
 
 // ✅ Login User
@@ -77,7 +98,6 @@ export const loginUser = async (req, res) => {
     res.status(500).json({ message: "Error logging in", error });
   }
 };
-
 // 🚀 Fetch All Users
 export const getAllUsers = async (req, res) => {
   try {
