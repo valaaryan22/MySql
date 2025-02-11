@@ -1,6 +1,7 @@
 import { Sequelize, DataTypes } from 'sequelize';
 import sequelize from "../db/index.js";
 
+// Define FAQ model without association
 const FAQ = sequelize.define('FAQ', {
   id: {
     type: DataTypes.INTEGER,

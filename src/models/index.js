@@ -15,4 +15,5 @@ const initDB = async () => {
   }
 };
 
-export { sequelize, User, initDB };
+export { initDB, sequelize, User };
+

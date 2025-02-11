@@ -6,7 +6,7 @@ import faqRoutes from './routes/faqRoutes.js';
 import cookieParser from "cookie-parser";
 import swaggerUi from 'swagger-ui-express';
 import { swaggerDocument } from './swagger.config.js';
-
+import './models/associations.js'
 const app = express();
 
 // Middleware
