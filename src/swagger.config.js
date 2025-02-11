@@ -1,4 +1,3 @@
-// http://localhost:5000/api-docs/
 export const swaggerDocument = {
     openapi: "3.0.0",
     info: {
@@ -50,7 +49,7 @@ export const swaggerDocument = {
                 },
                 responses: {
                     "201": { description: "User registered successfully" },
-                    "400": { description: "Validation error or user already exists,username and password error" },
+                    "400": { description: "Validation error or user already exists, username and password error" },
                     "500": { description: "Server error" },
                 },
             },
@@ -96,6 +95,7 @@ export const swaggerDocument = {
             get: {
                 summary: "Logout user",
                 tags: ["User Management"],
+                security: [{ cookieAuth: [] }],
                 responses: {
                     "200": { description: "Logged out successfully" },
                     "500": { description: "Server error" },
@@ -106,6 +106,7 @@ export const swaggerDocument = {
             post: {
                 summary: "Delete user by email",
                 tags: ["User Management"],
+                security: [{ cookieAuth: [] }],
                 requestBody: {
                     required: true,
                     content: {
@@ -144,10 +145,97 @@ export const swaggerDocument = {
                 },
             },
             get: {
-                summary: "List all FAQs",
+                summary: "Search FAQs based on question or answer text",
+                tags: ["FAQ Management"],
+                parameters: [
+                    {
+                        name: "search",
+                        in: "query",
+                        description: "Search FAQs based on question or answer text",
+                        required: false,
+                        schema: {
+                            type: "string",
+                            example: "payment",
+                        },
+                    },
+                    {
+                        name: "page",
+                        in: "query",
+                        description: "Page number for pagination",
+                        required: false,
+                        schema: {
+                            type: "integer",
+                            default: 1,
+                        },
+                    },
+                    {
+                        name: "limit",
+                        in: "query",
+                        description: "Limit number of results per page",
+                        required: false,
+                        schema: {
+                            type: "integer",
+                            default: 10,
+                        },
+                    },
+                ],
+                responses: {
+                    "200": {
+                        description: "FAQs listed successfully",
+                        content: {
+                            "application/json": {
+                                schema: {
+                                    type: "object",
+                                    properties: {
+                                        message: { type: "string", example: "FAQs listed successfully" },
+                                        faqs: {
+                                            type: "array",
+                                            items: {
+                                                $ref: "#/components/schemas/FAQ",
+                                            },
+                                        },
+                                        pagination: {
+                                            type: "object",
+                                            properties: {
+                                                currentPage: { type: "integer", example: 1 },
+                                                totalPages: { type: "integer", example: 1 },
+                                                totalFAQs: { type: "integer", example: 5 },
+                                                limit: { type: "integer", example: 10 },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    "500": { description: "Server error" },
+                },
+            },
+        },
+        "/users/getallfaqs": {
+            get: {
+                summary: "Get all FAQs",
                 tags: ["FAQ Management"],
                 responses: {
-                    "200": { description: "FAQs listed successfully" },
+                    "200": {
+                        description: "All FAQs listed successfully",
+                        content: {
+                            "application/json": {
+                                schema: {
+                                    type: "object",
+                                    properties: {
+                                        message: { type: "string", example: "All FAQs listed successfully" },
+                                        faqs: {
+                                            type: "array",
+                                            items: {
+                                                $ref: "#/components/schemas/FAQ",
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
                     "500": { description: "Server error" },
                 },
             },
@@ -182,6 +270,7 @@ export const swaggerDocument = {
             post: {
                 summary: "Delete an FAQ",
                 tags: ["FAQ Management"],
+                security: [{ cookieAuth: [] }],
                 requestBody: {
                     required: true,
                     content: {
@@ -216,6 +305,7 @@ export const swaggerDocument = {
                                 properties: {
                                     name: { type: "string", example: "Aryan Updated" },
                                     email: { type: "string", format: "email", example: "aryanupdated@gmail.com" },
+                                    newEmail:{ type: "string", format: "email", example: "aryanupdated@gmail.com" }
                                 },
                             },
                         },
@@ -241,8 +331,8 @@ export const swaggerDocument = {
                             schema: {
                                 type: "object",
                                 properties: {
-                                    old_password: { type: "string", format: "password", example: "OldPassword123!" },
-                                    new_password: { type: "string", format: "password", example: "NewPassword123!" },
+                                    email: { type: "string", format: "email", example: "aryan22@gmail.com" },
+                                    password: { type: "string", format: "password", example: "NewPassword123!" },
                                 },
                             },
                         },
