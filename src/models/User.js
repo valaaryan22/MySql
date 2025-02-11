@@ -39,11 +39,19 @@ const User = sequelize.define(
         this.setDataValue("password_history", JSON.stringify(value));
       },
     },
+    registration_time: {
+      type: DataTypes.DATE, // or DataTypes.DATEONLY if you only need the date part
+      allowNull: false,
+      defaultValue: DataTypes.NOW,  // Automatically sets current timestamp on user creation
+    },
   },
   {
     tableName: "user",
     timestamps: false,
   }
 );
+
+// Sync with the database
+User.sync({ alter: true }); // Adjust this based on your project setup
 
 export default User;

@@ -24,7 +24,6 @@ const validateUser = (name, email, password) => {
 
   return errors;
 };
-
 // 🚀 Register User
 export const registerUser = async (req, res) => {
   try {
@@ -41,28 +40,67 @@ export const registerUser = async (req, res) => {
     // Hash Password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create User with Empty Password History
-    const user = await User.create({ name, email, password: hashedPassword, password_history: [] });
+    // Create User with current registration time
+    const user = await User.create({ 
+      name, 
+      email, 
+      password: hashedPassword, 
+      password_history: [], 
+      registration_time: new Date() // Set the current date and time
+    });
 
-    // Schedule sending welcome email 24 hours after registration
+    // Ensure the user object has registration_time
+    console.log("User created with registration_time:", user.registration_time);
+
+    // Schedule sending welcome email 10 seconds after registration
     scheduleWelcomeEmail(user);
 
     res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Error registering user", error });
+    console.error("Error registering user:", error);
+    res.status(500).json({ message: "Error registering user", error: error.message });
   }
 };
 
-// Function to send welcome email after 24 hours
 const scheduleWelcomeEmail = (user) => {
-  const { name, email } = user;
+  const { name, email, registration_time } = user;
 
-  // We now handle the 24-second delay directly using a timestamp (24 seconds after registration)
-  const delayInSeconds = 24; // Change this value to 86400 for 24 hours if needed
-  const delayInMilliseconds = delayInSeconds * 1000; // Convert seconds to milliseconds
+  // Ensure registration_time is a valid Date
+  const emailSendTime = new Date(registration_time);
+  if (isNaN(emailSendTime)) {
+    console.error("Invalid registration_time:", registration_time);
+    return; // Exit early if the date is invalid
+  }
 
-  // Using setTimeout to execute the function after the delay
-  setTimeout(async () => {
+  // Calculate 10 seconds after registration time
+  emailSendTime.setSeconds(emailSendTime.getSeconds() + 10); // Add 10 seconds to registration time
+
+  // Extract time components (change const to let so we can reassign)
+  let minute = emailSendTime.getMinutes();
+  let hour = emailSendTime.getHours();
+  let day = emailSendTime.getDate();
+  let month = emailSendTime.getMonth() + 1; // Months are 0-indexed
+  let year = emailSendTime.getFullYear();
+  let second = emailSendTime.getSeconds(); // Get the seconds value as well
+
+  // Debugging: log the values for time components
+  console.log("Extracted Time - Hour:", hour, "Minute:", minute, "Second:", second, "Day:", day, "Month:", month);
+
+  // Validate the extracted values, set fallback if any is invalid
+  if (isNaN(hour) || hour < 0 || hour > 23) hour = 0;
+  if (isNaN(minute) || minute < 0 || minute > 59) minute = 0;
+  if (isNaN(second) || second < 0 || second > 59) second = 0;
+  if (isNaN(day) || day < 1 || day > 31) day = 1;
+  if (isNaN(month) || month < 1 || month > 12) month = 1;
+
+  // We need to make sure the cron job runs on the specific date and time
+  const cronExpression = `${second} ${minute} ${hour} ${day} ${month} *`;
+
+  // Log the final cron expression for debugging
+  console.log(`Scheduling cron job for: ${cronExpression} (Time: ${emailSendTime})`);
+
+  // Schedule cron job
+  cron.schedule(cronExpression, async () => {
     try {
       // Send Welcome Email
       await sendMail(email, "Welcome!", `Hello ${name}, welcome to our platform!`);
@@ -70,7 +108,7 @@ const scheduleWelcomeEmail = (user) => {
     } catch (error) {
       console.error(`Error sending welcome email to ${email}:`, error);
     }
-  }, delayInMilliseconds); // This will trigger the email after the delay
+  });
 };
 
 // ✅ Login User
