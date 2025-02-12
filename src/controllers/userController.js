@@ -2,36 +2,35 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import User from "../models/user.js";
 import sendMail from "../utils/sendMail.js";
+import * as Yup from "yup";  // Import Yup
 import cron from "node-cron";
 
-// ✅ Validate User Input
-const validateUser = (name, email, password) => {
-  const errors = [];
+// Create Yup validation schema
+const userValidationSchema = Yup.object({
+  name: Yup.string()
+    .min(3, "Name must be at least 3 characters.")
+    .max(50, "Name must be at most 50 characters.")
+    .matches(/^[a-zA-Z0-9 ]+$/, "Name must contain only letters, numbers, and spaces.")
+    .required("Name is required."),
+  email: Yup.string()
+    .email("Invalid email format.")
+    .required("Email is required."),
+  password: Yup.string()
+    .min(8, "Password must be at least 8 characters.")
+    .max(20, "Password must be at most 20 characters.")
+    .matches(/[A-Z]/, "Password must contain at least one uppercase letter.")
+    .matches(/[a-z]/, "Password must contain at least one lowercase letter.")
+    .matches(/[0-9]/, "Password must contain at least one number.")
+    .matches(/[@$!%*?&]/, "Password must contain at least one special character (@$!%*?&).")
+    .required("Password is required."),
+});
 
-  if (!name || name.length < 3 || name.length > 50 || !/^[a-zA-Z0-9 ]+$/.test(name)) {
-    errors.push("Name must be 3-50 characters long and contain only letters, numbers, and spaces.");
-  }
-
-  if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
-    errors.push("Invalid email format.");
-  }
-
-  if (!password || password.length < 8 || password.length > 20 ||
-    !/[A-Z]/.test(password) || !/[a-z]/.test(password) ||
-    !/[0-9]/.test(password) || !/[@$!%*?&]/.test(password)) {
-    errors.push("Password must be 8-20 characters with at least 1 uppercase, 1 lowercase, 1 number, and 1 special character (@$!%*?&).");
-  }
-
-  return errors;
-};
-// 🚀 Register User
 export const registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // Validate User Input
-    const errors = validateUser(name, email, password);
-    if (errors.length > 0) return res.status(400).json({ message: errors });
+    // Validate User Input using Yup schema
+    await userValidationSchema.validate(req.body, { abortEarly: false });
 
     // Check if user already exists
     const existingUser = await User.findOne({ where: { email } });
@@ -41,16 +40,13 @@ export const registerUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create User with current registration time
-    const user = await User.create({ 
-      name, 
-      email, 
-      password: hashedPassword, 
-      password_history: [], 
-      registration_time: new Date() // Set the current date and time
+    const user = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      password_history: [],
+      registration_time: new Date()
     });
-
-    // Ensure the user object has registration_time
-    console.log("User created with registration_time:", user.registration_time);
 
     // Schedule sending welcome email 10 seconds after registration
     scheduleWelcomeEmail(user);
@@ -58,51 +54,30 @@ export const registerUser = async (req, res) => {
     res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
     console.error("Error registering user:", error);
+    if (error instanceof Yup.ValidationError) {
+      return res.status(400).json({ message: error.errors });
+    }
     res.status(500).json({ message: "Error registering user", error: error.message });
   }
 };
 
 const scheduleWelcomeEmail = (user) => {
   const { name, email, registration_time } = user;
-
-  // Ensure registration_time is a valid Date
   const emailSendTime = new Date(registration_time);
-  if (isNaN(emailSendTime)) {
-    console.error("Invalid registration_time:", registration_time);
-    return; // Exit early if the date is invalid
-  }
 
-  // Calculate 10 seconds after registration time
-  emailSendTime.setSeconds(emailSendTime.getSeconds() + 10); // Add 10 seconds to registration time
+  emailSendTime.setSeconds(emailSendTime.getSeconds() + 10);
 
-  // Extract time components (change const to let so we can reassign)
   let minute = emailSendTime.getMinutes();
   let hour = emailSendTime.getHours();
   let day = emailSendTime.getDate();
-  let month = emailSendTime.getMonth() + 1; // Months are 0-indexed
+  let month = emailSendTime.getMonth() + 1;
   let year = emailSendTime.getFullYear();
-  let second = emailSendTime.getSeconds(); // Get the seconds value as well
+  let second = emailSendTime.getSeconds();
 
-  // Debugging: log the values for time components
-  console.log("Extracted Time - Hour:", hour, "Minute:", minute, "Second:", second, "Day:", day, "Month:", month);
-
-  // Validate the extracted values, set fallback if any is invalid
-  if (isNaN(hour) || hour < 0 || hour > 23) hour = 0;
-  if (isNaN(minute) || minute < 0 || minute > 59) minute = 0;
-  if (isNaN(second) || second < 0 || second > 59) second = 0;
-  if (isNaN(day) || day < 1 || day > 31) day = 1;
-  if (isNaN(month) || month < 1 || month > 12) month = 1;
-
-  // We need to make sure the cron job runs on the specific date and time
   const cronExpression = `${second} ${minute} ${hour} ${day} ${month} *`;
 
-  // Log the final cron expression for debugging
-  console.log(`Scheduling cron job for: ${cronExpression} (Time: ${emailSendTime})`);
-
-  // Schedule cron job
   cron.schedule(cronExpression, async () => {
     try {
-      // Send Welcome Email
       await sendMail(email, "Welcome!", `Hello ${name}, welcome to our platform!`);
       console.log(`Welcome email sent to ${email}`);
     } catch (error) {
@@ -110,6 +85,7 @@ const scheduleWelcomeEmail = (user) => {
     }
   });
 };
+
 
 // ✅ Login User
 export const loginUser = async (req, res) => {
@@ -126,7 +102,7 @@ export const loginUser = async (req, res) => {
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: false,
       sameSite: "Strict",
       maxAge: 3600000,
     });
@@ -190,23 +166,35 @@ export const updateUserDetails = async (req, res) => {
     res.status(500).json({ message: "Error updating user details", error });
   }
 };
+const passwordChangeSchema = Yup.object({
+  email: Yup.string().email("Invalid email format").required("Email is required."),
+  password: Yup.string()
+    .min(8, "Password must be at least 8 characters.")
+    .max(20, "Password must be at most 20 characters.")
+    .matches(/[A-Z]/, "Password must contain at least one uppercase letter.")
+    .matches(/[a-z]/, "Password must contain at least one lowercase letter.")
+    .matches(/[0-9]/, "Password must contain at least one number.")
+    .matches(/[@$!%*?&]/, "Password must contain at least one special character (@$!%*?&).")
+    .required("Password is required."),
+});
+
 export const changeUserPassword = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Check if user exists
+    // Validate Password Change Input
+    await passwordChangeSchema.validate(req.body, { abortEarly: false });
+
     const user = await User.findOne({ where: { email } });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Ensure password_history is always an array
     let passwordHistory = user.password_history || [];
     if (typeof passwordHistory === "string") {
       passwordHistory = JSON.parse(passwordHistory);
     }
 
-    // Check if new password was used before
     const isReuse = await Promise.all(
       passwordHistory.map(async (oldHash) => bcrypt.compare(password, oldHash))
     );
@@ -215,19 +203,20 @@ export const changeUserPassword = async (req, res) => {
       return res.status(400).json({ message: "New password cannot be one of the last 3 used." });
     }
 
-    // Hash new password
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Update password and maintain last 3 passwords in history
     passwordHistory = [hashedPassword, ...passwordHistory.slice(0, 2)];
     user.password_history = passwordHistory;
     user.password = hashedPassword;
 
-    await user.save(); // Save updated password
+    await user.save();
 
     res.status(200).json({ message: "Password updated successfully" });
   } catch (error) {
     console.error("Password Update Error:", error);
+    if (error instanceof Yup.ValidationError) {
+      return res.status(400).json({ message: error.errors });
+    }
     res.status(500).json({ message: "Error updating password", error });
   }
 };
+

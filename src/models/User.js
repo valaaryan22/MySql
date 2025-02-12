@@ -16,7 +16,6 @@ const User = sequelize.define(
     email: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
       validate: {
         isEmail: true, // Ensures valid email format
       },
@@ -30,20 +29,24 @@ const User = sequelize.define(
       allowNull: false,
       defaultValue: [], // Default empty array to avoid NULL values
       get() {
-        // Ensure it always returns an array
         const history = this.getDataValue("password_history");
         return history ? JSON.parse(history) : [];
       },
       set(value) {
-        // Ensure it stores data as JSON
         this.setDataValue("password_history", JSON.stringify(value));
       },
-    },
-    registration_time: {
-      type: DataTypes.DATE, // or DataTypes.DATEONLY if you only need the date part
+    }, isVerified: {
+      type: DataTypes.BOOLEAN,
       allowNull: false,
-      defaultValue: DataTypes.NOW,  // Automatically sets current timestamp on user creation
+      defaultValue: false,
     },
+    
+    registration_time: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW, // Automatically sets current timestamp on user creation
+    },
+   
   },
   {
     tableName: "user",
@@ -51,7 +54,6 @@ const User = sequelize.define(
   }
 );
 
-// Sync with the database
-User.sync({ alter: true }); // Adjust this based on your project setup
+User.sync({ alter: true });
 
 export default User;

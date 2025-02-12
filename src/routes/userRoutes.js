@@ -1,15 +1,15 @@
-import express from 'express';
-import { registerUser, loginUser, getAllUsers, logoutUser, deleteUserByEmail,  updateUserDetails, changeUserPassword } from '../controllers/userController.js';
-import { authenticateUser } from '../middlewares/authMiddleware.js';
+    import express from 'express';
+    import { registerUser, loginUser, getAllUsers, logoutUser, deleteUserByEmail,  updateUserDetails, changeUserPassword } from '../controllers/userController.js';
+    import { authenticateUser } from '../middlewares/authMiddleware.js';
 
-const router = express.Router();
+    const router = express.Router();
 
-router.post('/register', registerUser);
-router.post('/login', loginUser);
-router.get('/getuser',authenticateUser,getAllUsers)
-router.get('/logout',authenticateUser,logoutUser)
-router.post('/deleteuser',authenticateUser,deleteUserByEmail)
-router.put('/updatedata',authenticateUser,updateUserDetails)
-router.post('/changepassword',authenticateUser,changeUserPassword)
+    router.post('/register', registerUser);
+    router.post('/login', loginUser);
+    router.get('/getuser',authenticateUser,getAllUsers)
+    router.get('/logout',authenticateUser,logoutUser)
+    router.post('/deleteuser',authenticateUser,deleteUserByEmail)
+    router.put('/updatedata',updateUserDetails)
+    router.post('/changepassword',authenticateUser,changeUserPassword)
 
-export default router;
+    export default router;
