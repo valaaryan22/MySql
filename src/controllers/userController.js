@@ -121,7 +121,34 @@ export const getAllUsers = async (req, res) => {
     res.status(500).json({ message: "Error fetching users", error });
   }
 };
+export const getCurrentUser = async (req, res) => {
+  try {
+      // Get user ID from JWT token
+      const token = req.cookies.token;
+      if (!token) {
+          return res.status(401).json({ message: "No token provided" });
+      }
 
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const userId = decoded.userId;
+
+      // Find user
+      const user = await User.findByPk(userId);
+      if (!user) {
+          return res.status(404).json({ message: "User not found" });
+      }
+
+      // Return user data (excluding sensitive information)
+      res.json({
+          id: user.id,
+          name: user.name,
+          email: user.email
+      });
+  } catch (error) {
+      console.error("Error getting current user:", error);
+      res.status(500).json({ message: "Error getting user data" });
+  }
+};
 // ✅ Logout User
 export const logoutUser = (req, res) => {
   res.clearCookie("token");

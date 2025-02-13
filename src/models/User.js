@@ -30,30 +30,49 @@ const User = sequelize.define(
       defaultValue: [], // Default empty array to avoid NULL values
       get() {
         const history = this.getDataValue("password_history");
-        return history ? JSON.parse(history) : [];
+        try {
+          // Safely parse the password_history
+          return history ? JSON.parse(history) : [];
+        } catch (error) {
+          console.error('Error parsing password history:', error);
+          return [];  // return an empty array in case of parsing failure
+        }
       },
       set(value) {
         this.setDataValue("password_history", JSON.stringify(value));
       },
-    }, isVerified: {
+    },
+    isVerified: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false,
     },
-    
     registration_time: {
       type: DataTypes.DATE,
       allowNull: false,
       defaultValue: DataTypes.NOW, // Automatically sets current timestamp on user creation
     },
-   
+    payment_status: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      allowNull: false,
+    },
+    payment_amount: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+    },
+    payment_date: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   },
   {
     tableName: "user",
-    timestamps: false,
+    timestamps: false, // If you don't want Sequelize to handle timestamps
   }
 );
 
+// Synchronize the model with the database
 User.sync({ alter: true });
 
 export default User;
