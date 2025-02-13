@@ -22,7 +22,7 @@ const transporter = nodemailer.createTransport({
 
 // Send payment email to user
 export const sendPaymentEmail = async (userEmail, amount, orderId) => {
-  const paymentLink = `${process.env.FRONTEND_URL}/payment?order=${orderId}&amount=${amount}`;
+  const paymentLink = `${process.env.FRONTEND_URL}/payment/${orderId}/${amount}`;
 
   const mailOptions = {
     from: process.env.EMAIL_USER,
