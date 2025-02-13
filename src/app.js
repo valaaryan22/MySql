@@ -1,5 +1,5 @@
 import express from 'express';
-import sequelize from "../src/db/index.js";
+import sequelize from "./db/index.js";
 import userRoutes from './routes/userRoutes.js';
 import faqRoutes from './routes/faqRoutes.js';
 import cors from "cors";
@@ -13,7 +13,7 @@ const app = express();
 
 // CORS options to allow only http://localhost:5173
 const corsOptions = {
-  origin: 'http://localhost:5173', // Allow only this origin
+  origin: process.env.ORIGIN, // Allow only this origin
   methods: ['GET', 'POST', 'PUT', 'DELETE'], // You can customize the allowed HTTP methods
   credentials: true,  // Allow credentials such as cookies
 };
@@ -39,7 +39,7 @@ app.use((req, res) => {
 
 // Start server
 sequelize.sync().then(() => {
-  app.listen(5000, () => {
+  app.listen(process.env.PORT, () => {
     console.log('🚀 Server running on port 5000');
   });
 });
